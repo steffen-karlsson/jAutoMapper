@@ -1,6 +1,6 @@
 jAutoMapper
 ===========
-TIRED OF WRITING SERIALIZED ENTITY/DATA FILES WHEN CALL JSON API-CALL LOOK HERE!
+##### Tired of writing `@SerializedName(...)` entity/data dummy `.java` class-files, in order to parse json API-calls, Take a look HERE!
 
 `jAutoMapper` is a Java tool for generating `.java` class-files, based on either of following two conditions:
 * A json-formattet string.
