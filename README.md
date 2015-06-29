@@ -42,37 +42,38 @@ AutoJSON.getInstance()
 ```
 , can be translated into following two `.java` class-files:
 ####Profile.java
-```json
+```java
 package com.sk.aj.example;
-
+    
 import com.google.gson.annotations.SerializedName;
 import java.lang.String;
 
 public class Profile {
-   @SerializedName("author")
-   protected String author;
 
-   @SerializedName("company")
-   protected Company company;
-
-   @SerializedName("JobTitle")
-   protected String JobTitle;
-
-   @SerializedName("projectTitle")
-   protected String projectTitle;
-
-   public String getProjectTitle() {
-      return projectTitle;
-   }
-   
-   public void setProjectTitle(String projectTitle) {
-      this.projectTitle = projectTitle;
-   }
+    @SerializedName("author")
+    protected String author;
+    
+    @SerializedName("company")
+    protected Company company;
+    
+    @SerializedName("JobTitle")
+    protected String JobTitle;
+    
+    @SerializedName("projectTitle")
+    protected String projectTitle;
+    
+    public String getProjectTitle() {
+       return projectTitle;
+    }
+    
+    public void setProjectTitle(String projectTitle) {
+       this.projectTitle = projectTitle;
+    }
 }
 ```
 
 ####Company.java
-```json
+```java
 package com.sk.aj.example;
 
 import com.google.gson.annotations.SerializedName;
@@ -80,14 +81,15 @@ import java.lang.Integer;
 import java.lang.String;
 
 public class Company {
-   @SerializedName("zip")
-   protected Integer zip;
-   
-   @SerializedName("name")
-   protected String name;
-   
-   @SerializedName("city")
-   protected String city;
+
+    @SerializedName("zip")
+    protected Integer zip;
+    
+    @SerializedName("name")
+    protected String name;
+    
+    @SerializedName("city")
+    protected String city;
 }
 ```
 
