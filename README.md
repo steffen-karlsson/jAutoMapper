@@ -5,6 +5,38 @@ jAutoMapper
 * A json-formattet string.
 * URL to an API-call that returns json.
 
+###Features
+The singleton instance `AutoJSON` has following features and attributes:
+- `setClassName(...)`: The name of the outer most json object.
+- `setOutDirectory(...)`: Directory of the generated `.java` class-files.
+- `setPackageName(...)`: Package scope defined in each of the `.java` files.
+- `addOnFormatAttributeNameCallback(...)`: Interface in order to get a callback, for specifying how to name attributes as well as classes.
+
+    Default implementation of `OnFormatNameCallback`:
+    ```java
+    protected static OnFormatNameCallback mOnFormatCallback = new OnFormatNameCallback() {
+        public String formatAttr(String orgName) {
+           return orgName;
+        }
+        
+        public String formatClass(String orgName) {
+           return String.format("%s%s", orgName.substring(0, 1).toUpperCase(), 
+                                orgName.substring(1));
+        }
+    };
+    ```
+- `addProperties(...)`: `Set` of `AttrProperty`'s for each of the attributes in the json file, for which one of following states holds:
+    - `AttrProperty.ignore(...)`: Do not decompile attribute.
+    - `AttrProperty.generateGetter(...)`: Generate getter for attribute.
+    - `AttrProperty.generateSetter(...)`: Generate setter for attribute.
+    - `AttrProperty.generateGetterAndSetter(...)`: Generate getter and setter for attribute.
+- `setResultCallback(...)`: Callback to known when its successfully terminated or got canceled by an error.
+
+###Compile
+After specifying the configurations on the `AutoJSON` object, described above, can following functions be called:
+- `buildJson(...)`: Building the `.java` class-files based on json string.
+- `buildUrl(...)`: Building the `.java` class-files based on URL to an API that returns json.
+
 ###Example
 This simple json string:
 ```json
