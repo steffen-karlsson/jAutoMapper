@@ -14,6 +14,8 @@ import java.util.*;
  */
 final class JsonDecompiler {
 
+    private AutoJSON.Builder mSettings;
+
     protected interface OnDecompileFinishedHandler {
         void onError(String error);
         void onFinished(JavaFile file);
@@ -23,7 +25,7 @@ final class JsonDecompiler {
             Boolean.class, String.class, Integer.class, Long.class, Float.class, Double.class));
 
     private JavaFile handleJavaFile(TypeSpec classTypeSpec) {
-        return JavaFile.builder(AutoJSON.mPackageName, classTypeSpec).build();
+        return JavaFile.builder(mSettings.mPackageName, classTypeSpec).build();
     }
 
     private TypeSpec handleClass(String name, ArrayList<FieldSpec> fields, ArrayList<MethodSpec> methods) {
@@ -40,23 +42,23 @@ final class JsonDecompiler {
     }
 
     private FieldSpec handleAttribute(Type type, String name) {
-        return finalizeAttr(FieldSpec.builder(type, AutoJSON.mOnFormatCallback.formatAttr(name)), name);
+        return finalizeAttr(FieldSpec.builder(type, mSettings.mOnFormatCallback.formatAttr(name)), name);
     }
 
     private FieldSpec handleAttribute(String name) {
-        return finalizeAttr(FieldSpec.builder(ClassName.get(AutoJSON.mPackageName,
-                        AutoJSON.mOnFormatCallback.formatClass(name)),
-                AutoJSON.mOnFormatCallback.formatAttr(name)), name);
+        return finalizeAttr(FieldSpec.builder(ClassName.get(mSettings.mPackageName,
+                        mSettings.mOnFormatCallback.formatClass(name)),
+                mSettings.mOnFormatCallback.formatAttr(name)), name);
     }
 
     private FieldSpec handleArray(Type type, String name) {
         return finalizeAttr(FieldSpec.builder(ParameterizedTypeName.get(List.class, type),
-                AutoJSON.mOnFormatCallback.formatAttr(name)), name);
+                mSettings.mOnFormatCallback.formatAttr(name)), name);
     }
 
     private FieldSpec handleArray(TypeName typeName, String name) {
         return finalizeAttr(FieldSpec.builder(ParameterizedTypeName.get(ClassName.get(List.class), typeName),
-                AutoJSON.mOnFormatCallback.formatAttr(name)), name);
+                mSettings.mOnFormatCallback.formatAttr(name)), name);
     }
 
     private FieldSpec finalizeAttr(FieldSpec.Builder builder, String annotatioName) {
@@ -71,7 +73,7 @@ final class JsonDecompiler {
                 .build();
     }
 
-    public static void handleRootAsArray(JSONArray jsonArray, OnDecompileFinishedHandler result) {
+    public void handleRootAsArray(JSONArray jsonArray, OnDecompileFinishedHandler result) {
         //TODO: Handle array as root
     }
 
@@ -83,7 +85,7 @@ final class JsonDecompiler {
             if (k instanceof String) {
                 String key = (String) k;
                 // Check if keyword is ignored
-                if (AutoJSON.mIgnores.containsKey(key))
+                if (mSettings.mIgnores.containsKey(key))
                     continue;
 
                 FieldSpec field = null;
@@ -112,33 +114,36 @@ final class JsonDecompiler {
                     fields.add(field);
 
                     // Adding getter and setter method if specified
-                    if (AutoJSON.mGetters.containsKey(key))
+                    if (mSettings.mGetters.containsKey(key))
                         methods.add(GetterSetter.generateGetter(key, field.type));
-                    if (AutoJSON.mSetters.containsKey(key))
+                    if (mSettings.mSetters.containsKey(key))
                         methods.add(GetterSetter.generateSetter(key, field.type));
                 }
             } else
                 result.onError(AutoJSON.TAG + "Unsupported key type: " + k.getClass().getSimpleName());
         }
 
-        TypeSpec clzz = handleClass(AutoJSON.mOnFormatCallback.formatClass(parentKey), fields, methods);
+        TypeSpec clzz = handleClass(mSettings.mOnFormatCallback.formatClass(parentKey), fields, methods);
         result.onFinished(handleJavaFile(clzz));
         return handleAttribute(parentKey);
     }
 
-    public static void handleRootAsObject(JSONObject jsonObject, OnDecompileFinishedHandler result) {
-        JsonDecompiler.getInstance().loopHandleRootAsObject(jsonObject, AutoJSON.mClassName, result);
+    public void handleRootAsObject(JSONObject jsonObject, OnDecompileFinishedHandler result) {
+        loopHandleRootAsObject(jsonObject, mSettings.mClassName, result);
     }
 
     private static boolean isNestedJson(Object possibleJson) {
         return possibleJson instanceof JSONObject || possibleJson instanceof JSONArray;
     }
 
-    private static JsonDecompiler ourInstance = new JsonDecompiler();
-    private static JsonDecompiler getInstance() {
+    private static JsonDecompiler ourInstance = null;
+
+    static JsonDecompiler getInstance(AutoJSON.Builder settings) {
+        if (ourInstance == null)
+            ourInstance = new JsonDecompiler(settings);
         return ourInstance;
     }
-
-    private JsonDecompiler() {
+    private JsonDecompiler(AutoJSON.Builder settings) {
+        this.mSettings = settings;
     }
 }
