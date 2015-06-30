@@ -6,14 +6,16 @@ jAutoMapper
 * A json-formattet string.
 * URL to an API-call that returns json.
 
-###Features
-The singleton instance `AutoJSON` has following features and attributes:
+###Builder
+An instance `AutoJSON.Builder` has following configurations and attributes:
+
 - `setClassName(...)`: The name of the outer most json object.
 - `setOutDirectory(...)`: Directory of the generated `.java` class-files.
 - `setPackageName(...)`: Package scope defined in each of the `.java` files.
 - `addOnFormatAttributeNameCallback(...)`: Interface in order to get a callback, for specifying how to name attributes as well as classes.
 
     Default implementation of `OnFormatNameCallback`:
+    
     ```java
     protected static OnFormatNameCallback mOnFormatCallback = new OnFormatNameCallback() {
         public String formatAttr(String orgName) {
@@ -26,15 +28,18 @@ The singleton instance `AutoJSON` has following features and attributes:
         }
     };
     ```
+
 - `addProperties(...)`: `Set` of `AttrProperty`'s for each of the attributes in the json file, for which one of following states holds:
     - `AttrProperty.ignore(...)`: Do not decompile attribute.
     - `AttrProperty.generateGetter(...)`: Generate getter for attribute.
     - `AttrProperty.generateSetter(...)`: Generate setter for attribute.
     - `AttrProperty.generateGetterAndSetter(...)`: Generate getter and setter for attribute.
 - `setResultCallback(...)`: Callback to known when its successfully terminated or got canceled by an error.
+- `create()`: Last function to call, which returns an instance of `AutoJSON`.
 
 ###Compile
-After specifying the configurations on the `AutoJSON` object, described above, can following functions be called:
+After specifying the configurations on the `AutoJSON.Builder` object, described above, is following functions available on the `AutoJSON` object:
+
 - `buildJson(...)`: Building the `.java` class-files based on json string.
 - `buildUrl(...)`: Building the `.java` class-files based on URL to an API that returns json.
 
@@ -55,7 +60,7 @@ This simple json string:
 ```
 , which by following lines of code:
 ```java
-AutoJSON.getInstance()
+AutoJSON conf = new AutoJSON.Builder()
    .setClassName("Profile")
    .setResultCallback(new ResultCallback() {
       public void onSuccess() {
@@ -71,7 +76,10 @@ AutoJSON.getInstance()
        add(AttrProperty.ignore("country"));
        add(AttrProperty.generateGetterAndSetter("projectTitle"));
     }})
-    .buildJson(<Path to string>);
+    .create();
+    
+// conf can now be called as many times, as there is API-calls with same configuration.
+conf.buildJson(<Path to string>);
 ```
 , can be translated into following two `.java` class-files:
 ####Profile.java
@@ -128,4 +136,3 @@ public class Company {
 
 ###Known bugs
 - `Date.class`, `Calendar.class` support (at the moment they are decompiled as `String.class`).
-
