@@ -1,5 +1,6 @@
 jAutoMapper
 ===========
+##### Tired of writing `@SerializedName(...)` entity/data dummy `.java` class-files, in order to parse json API-calls, Take a look HERE!
 
 `jAutoMapper` is a Java tool for generating `.java` class-files, based on either of following two conditions:
 * A json-formattet string.
@@ -124,4 +125,7 @@ public class Company {
     protected String city;
 }
 ```
+
+###Known bugs
+- `Date.class`, `Calendar.class` support (at the moment they are decompiled as `String.class`).
 
