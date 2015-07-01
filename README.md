@@ -35,6 +35,7 @@ An instance `AutoJSON.Builder` has following configurations and attributes:
     - `AttrProperty.generateSetter(...)`: Generate setter for attribute.
     - `AttrProperty.generateGetterAndSetter(...)`: Generate getter and setter for attribute.
 - `setResultCallback(...)`: Callback to known when its successfully terminated or got canceled by an error.
+- `shouldOverrideIfExists()`: Defines whether an already existing class should be overridden, default=`false`.
 - `create()`: Last function to call, which returns an instance of `AutoJSON`.
 
 ###Compile
@@ -72,10 +73,9 @@ AutoJSON conf = new AutoJSON.Builder()
       }
     })
     .setPackageName("com.sk.aj.example")
-    .addProperties(new HashSet<AttrProperty>() {{
-       add(AttrProperty.ignore("country"));
-       add(AttrProperty.generateGetterAndSetter("projectTitle"));
-    }})
+    .addProperties(
+        AttrProperty.ignore("country"),
+        AttrProperty.generateGetterAndSetter("projectTitle"))
     .create();
     
 // conf can now be called as many times, as there is API-calls with same configuration.
