@@ -14,7 +14,8 @@ import java.util.*;
  */
 final class JsonDecompiler {
 
-    private AutoJSON.Builder mSettings;
+    private final OnDecompileFinishedHandler mResultListener;
+    private final AutoJSON.Builder mSettings;
 
     protected interface OnDecompileFinishedHandler {
         void onError(String error);
@@ -28,7 +29,7 @@ final class JsonDecompiler {
         return JavaFile.builder(mSettings.mPackageName, classTypeSpec).build();
     }
 
-    private TypeSpec handleClass(String name, ArrayList<FieldSpec> fields, ArrayList<MethodSpec> methods) {
+    private void handleClass(String name, List<FieldSpec> fields, List<MethodSpec> methods) {
         TypeSpec.Builder clzz = TypeSpec.classBuilder(name)
                 .addModifiers(Modifier.PUBLIC);
         for (FieldSpec field : fields)
@@ -38,7 +39,8 @@ final class JsonDecompiler {
             for (MethodSpec method : methods)
                 clzz.addMethod(method);
         }
-        return clzz.build();
+        TypeSpec spec = clzz.build();
+        mResultListener.onFinished(handleJavaFile(spec));
     }
 
     private FieldSpec handleAttribute(Type type, String name) {
@@ -73,11 +75,22 @@ final class JsonDecompiler {
                 .build();
     }
 
-    public void handleRootAsArray(JSONArray jsonArray, OnDecompileFinishedHandler result) {
-        //TODO: Handle array as root
+    public void handleRootAsArray(JSONArray jsonArray) {
+        handleRootAsArray(jsonArray, mSettings.mClassName);
     }
 
-    private FieldSpec loopHandleRootAsObject(JSONObject jsonObject, String parentKey, OnDecompileFinishedHandler result) {
+    private void handleRootAsArray(JSONArray jsonArray, String key) {
+        Object firstItem = jsonArray.get(0);
+        if (WRAPPER_TYPES.contains(firstItem.getClass()))
+            // Primitive array type
+            reportError("Root array with primitive types can't be parsed to a java-class");
+        else if (firstItem instanceof JSONObject) {
+            loopHandleRootAsObject((JSONObject)firstItem, String.format("%sObj", key));
+        } else
+            reportError("Unsupported key type: " + firstItem.getClass().getSimpleName());
+    }
+
+    private FieldSpec loopHandleRootAsObject(JSONObject jsonObject, String parentKey) {
         ArrayList<FieldSpec> fields = new ArrayList<>();
         ArrayList<MethodSpec> methods = new ArrayList<>();
 
@@ -93,7 +106,7 @@ final class JsonDecompiler {
                 if (isNestedJson(obj)) {
                     if (obj instanceof JSONObject) {
                         // Handling the case of a nested json object
-                        field = loopHandleRootAsObject((JSONObject) obj, key, result);
+                        field = loopHandleRootAsObject((JSONObject) obj, key);
                     } else if (obj instanceof JSONArray) {
                         // Handling the case of a nested json array
                         Object firstItem = ((JSONArray) obj).get(0);
@@ -102,34 +115,39 @@ final class JsonDecompiler {
                             // Primitive array type
                             field = handleArray(firstItem.getClass(), listName);
                         else if (firstItem instanceof JSONObject) {
-                            FieldSpec spec = loopHandleRootAsObject((JSONObject)firstItem, key, result);
+                            FieldSpec spec = loopHandleRootAsObject((JSONObject)firstItem, key);
                             field = handleArray(spec.type, listName);
                         } else
-                            result.onError(AutoJSON.TAG + "Unsupported key type: " + firstItem.getClass().getSimpleName());
+                            reportError("Unsupported key type: " + firstItem.getClass().getSimpleName());
                     }
                 } else
                     field = handleAttribute(obj.getClass(), key);
 
                 if (field != null) {
                     fields.add(field);
-
-                    // Adding getter and setter method if specified
-                    if (mSettings.mGetters.containsKey(key))
-                        methods.add(GetterSetter.generateGetter(key, field.type));
-                    if (mSettings.mSetters.containsKey(key))
-                        methods.add(GetterSetter.generateSetter(key, field.type));
+                    applyMethods(methods, key, field.type);
                 }
             } else
-                result.onError(AutoJSON.TAG + "Unsupported key type: " + k.getClass().getSimpleName());
+                reportError("Unsupported key type: " + k.getClass().getSimpleName());
         }
-
-        TypeSpec clzz = handleClass(mSettings.mOnFormatCallback.formatClass(parentKey), fields, methods);
-        result.onFinished(handleJavaFile(clzz));
+        handleClass(mSettings.mOnFormatCallback.formatClass(parentKey), fields, methods);
         return handleAttribute(parentKey);
     }
 
-    public void handleRootAsObject(JSONObject jsonObject, OnDecompileFinishedHandler result) {
-        loopHandleRootAsObject(jsonObject, mSettings.mClassName, result);
+    private void applyMethods(ArrayList<MethodSpec> methods, String key, TypeName type) {
+        // Adding getter and setter method if specified
+        if (mSettings.mGetters.containsKey(key))
+            methods.add(GetterSetter.generateGetter(key, type));
+        if (mSettings.mSetters.containsKey(key))
+            methods.add(GetterSetter.generateSetter(key, type));
+    }
+
+    private void reportError(String error) {
+        mResultListener.onError(AutoJSON.TAG + error);
+    }
+
+    public void handleRootAsObject(JSONObject jsonObject) {
+        loopHandleRootAsObject(jsonObject, mSettings.mClassName);
     }
 
     private static boolean isNestedJson(Object possibleJson) {
@@ -137,13 +155,13 @@ final class JsonDecompiler {
     }
 
     private static JsonDecompiler ourInstance = null;
-
-    static JsonDecompiler getInstance(AutoJSON.Builder settings) {
+    static JsonDecompiler getInstance(AutoJSON.Builder settings, OnDecompileFinishedHandler result) {
         if (ourInstance == null)
-            ourInstance = new JsonDecompiler(settings);
+            ourInstance = new JsonDecompiler(settings, result);
         return ourInstance;
     }
-    private JsonDecompiler(AutoJSON.Builder settings) {
+    private JsonDecompiler(AutoJSON.Builder settings, OnDecompileFinishedHandler result) {
         this.mSettings = settings;
+        this.mResultListener = result;
     }
 }

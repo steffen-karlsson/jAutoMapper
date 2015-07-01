@@ -71,12 +71,12 @@ public class AutoJSON {
 
     private void handleJson(String json) {
         JsonNode node = new JsonNode(json);
-        JsonDecompiler decompiler = JsonDecompiler.getInstance(mSettings);
+        JsonDecompiler decompiler = JsonDecompiler.getInstance(mSettings, onDecompileFinishedHandler);
         if (node.isArray()) {
-            decompiler.handleRootAsArray(node.getArray(), onDecompileFinishedHandler);
+            decompiler.handleRootAsArray(node.getArray());
             return;
         }
-        decompiler.handleRootAsObject(node.getObject(), onDecompileFinishedHandler);
+        decompiler.handleRootAsObject(node.getObject());
     }
 
     private JsonDecompiler.OnDecompileFinishedHandler onDecompileFinishedHandler
@@ -121,15 +121,15 @@ public class AutoJSON {
         private File mOut;
         private boolean usingDefaultFormatter = true;
 
-        protected Map<String, AttrProperty> mIgnores = null;
-        protected Map<String, AttrProperty> mGetters = null;
-        protected Map<String, AttrProperty> mSetters = null;
+        protected Map<String, AttrProperty> mIgnores = new HashMap<>();
+        protected Map<String, AttrProperty> mGetters = new HashMap<>();
+        protected Map<String, AttrProperty> mSetters = new HashMap<>();
 
         protected String mClassName = "Out";
         protected String mPackageName = "com.example.entities";
         protected OnFormatNameCallback mOnFormatCallback = new OnFormatNameCallback() {
             public String formatAttr(String orgName) {
-                return orgName;
+                return orgName.toLowerCase();
             }
 
             public String formatClass(String orgName) {
@@ -196,10 +196,6 @@ public class AutoJSON {
          * @param properties
          */
         public AutoJSON.Builder addProperties(@NotNull AttrProperty... properties) {
-            mIgnores = new HashMap<>();
-            mGetters = new HashMap<>();
-            mSetters = new HashMap<>();
-
             for (AttrProperty property : properties) {
                 String name = property.getName();
                 if (property.shouldIgnore()) {
