@@ -35,7 +35,7 @@ An instance `AutoJSON.Builder` has following configurations and attributes:
     - `AttrProperty.generateSetter(...)`: Generate setter for attribute.
     - `AttrProperty.generateGetterAndSetter(...)`: Generate getter and setter for attribute.
 - `setResultCallback(...)`: Callback to known when its successfully terminated or got canceled by an error.
-- `shouldOverrideIfExists()`: Defines whether an already existing class should be overridden, default=`false`.
+- `shouldOverrideIfExists(...)`: Defines whether an already existing class should be overridden, default=`false`.
 - `create()`: Last function to call, which returns an instance of `AutoJSON`.
 
 ###Compile
@@ -133,6 +133,44 @@ public class Company {
     protected String city;
 }
 ```
-
 ###Known bugs
 - `Date.class`, `Calendar.class` support (at the moment they are decompiled as `String.class`).
+- Only works for GET requests at the moment.
+
+
+----
+
+##Dependencies
+- [JavaPoet][1]
+- [OkHttp][2]
+- [Google Gson][3]
+- [Unirest][4]
+
+##License
+    The MIT License (MIT)
+
+    Copyright (c) 2015 Steffen Karlsson
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+
+ [1]: https://github.com/square/javapoet/
+ [2]: https://github.com/square/okhttp/
+ [3]: https://code.google.com/p/google-gson/
+ [4]: https://github.com/Mashape/unirest-java
