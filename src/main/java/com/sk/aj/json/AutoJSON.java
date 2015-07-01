@@ -13,6 +13,9 @@ import com.sun.istack.internal.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -87,7 +90,11 @@ public class AutoJSON {
 
         public void onFinished(JavaFile file) {
             try {
-                file.writeTo(mSettings.mOut);
+                String parentDir = mSettings.mOut.getCanonicalPath() + File.separator
+                        + file.packageName.replace(".", File.separator);
+                if (!new File(parentDir, file.typeSpec.name + ".java").exists()
+                        || mSettings.shouldOverrideIfExists)
+                    file.writeTo(mSettings.mOut);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -120,6 +127,7 @@ public class AutoJSON {
         private ResultCallback mResultCallback = null;
         private File mOut;
         private boolean usingDefaultFormatter = true;
+        private boolean shouldOverrideIfExists = false;
 
         protected Map<String, AttrProperty> mIgnores = new HashMap<>();
         protected Map<String, AttrProperty> mGetters = new HashMap<>();
@@ -231,6 +239,14 @@ public class AutoJSON {
         public AutoJSON.Builder addOnFormatAttributeNameCallback(@NotNull OnFormatNameCallback formatCallback) {
             mOnFormatCallback = formatCallback;
             this.usingDefaultFormatter = false;
+            return this;
+        }
+
+        /**
+         * @param override - default is false
+         */
+        public AutoJSON.Builder shouldOverrideIfExists(boolean override) {
+            this.shouldOverrideIfExists = override;
             return this;
         }
 
